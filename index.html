@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lazy Ass Workout App</title>
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;600;700;800&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --petrol: #1a7a7a;
+  --petrol-dark: #135e5e;
+  --petrol-light: #2ba5a5;
+  --bordeaux: #8b1a3a;
+  --bordeaux-dark: #6b1530;
+  --bordeaux-light: #b22255;
+  --white: #ffffff;
+  --off-white: #f5f5f5;
+  --gray-light: #e8e8e8;
+  --gray: #999;
+  --text-dark: #2a2a2a;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--off-white);
+  color: var(--text-dark);
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, .btn {
+  font-family: 'Raleway', sans-serif;
+}
+
+.screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 2rem 1.5rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.screen.active {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.screen.fade-out {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.app-title {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(1.6rem, 5vw, 2.4rem);
+  font-weight: 800;
+  color: var(--petrol-dark);
+  margin-bottom: 0.3rem;
+  text-align: center;
+  letter-spacing: -0.5px;
+}
+
+.app-subtitle {
+  font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+  color: var(--gray);
+  margin-bottom: 2.5rem;
+  font-weight: 300;
+}
+
+.step-label {
+  font-size: clamp(1.1rem, 3.5vw, 1.4rem);
+  font-weight: 700;
+  color: var(--petrol-dark);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 340px;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.1rem 2rem;
+  border: none;
+  border-radius: 16px;
+  font-size: clamp(1.05rem, 3vw, 1.25rem);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary {
+  background: var(--petrol);
+  color: var(--white);
+  box-shadow: 0 4px 15px rgba(26, 122, 122, 0.3);
+}
+
+.btn-primary:hover, .btn-primary:active {
+  background: var(--petrol-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 122, 122, 0.4);
+}
+
+.btn-secondary {
+  background: var(--bordeaux);
+  color: var(--white);
+  box-shadow: 0 4px 15px rgba(139, 26, 58, 0.3);
+}
+
+.btn-secondary:hover, .btn-secondary:active {
+  background: var(--bordeaux-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(139, 26, 58, 0.4);
+}
+
+.btn-start {
+  background: linear-gradient(135deg, var(--petrol), var(--petrol-light));
+  color: var(--white);
+  font-size: clamp(1.15rem, 3.5vw, 1.35rem);
+  padding: 1.2rem 3rem;
+  box-shadow: 0 4px 20px rgba(26, 122, 122, 0.35);
+  margin-top: 1.5rem;
+}
+
+.btn-start:hover, .btn-start:active {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(26, 122, 122, 0.5);
+}
+
+.btn-finish {
+  background: linear-gradient(135deg, var(--bordeaux), var(--bordeaux-light));
+  color: var(--white);
+  font-size: clamp(1.15rem, 3.5vw, 1.35rem);
+  padding: 1.2rem 3rem;
+  box-shadow: 0 4px 20px rgba(139, 26, 58, 0.35);
+}
+
+.btn-finish:hover, .btn-finish:active {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(139, 26, 58, 0.5);
+}
+
+.btn-small {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.8rem;
+  border-radius: 10px;
+  font-weight: 600;
+  background: var(--gray-light);
+  color: var(--text-dark);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-small:hover, .btn-small:active {
+  background: var(--petrol);
+  color: var(--white);
+}
+
+.btn-desc-toggle {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 10px;
+  font-weight: 600;
+  background: var(--gray-light);
+  color: var(--text-dark);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 0.8rem 0;
+}
+
+.btn-desc-toggle:hover {
+  background: var(--petrol);
+  color: white;
+}
+
+.btn-done {
+  background: var(--petrol);
+  color: var(--white);
+  font-size: clamp(1.1rem, 3.2vw, 1.3rem);
+  padding: 1rem 3rem;
+  box-shadow: 0 4px 15px rgba(26, 122, 122, 0.3);
+  margin-top: 1.5rem;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+
+.btn-done:hover, .btn-done:active {
+  background: var(--petrol-dark);
+  transform: translateY(-2px);
+}
+
+/* Workout list */
+.workout-list {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin: 1rem 0;
+}
+
+.workout-item {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  transition: all 0.3s ease;
+}
+
+.workout-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.workout-item-info {
+  flex: 1;
+  cursor: pointer;
+}
+
+.workout-item-name {
+  font-family: 'Raleway', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1rem, 3vw, 1.15rem);
+  color: var(--petrol-dark);
+}
+
+.workout-item-english {
+  font-style: italic;
+  color: var(--gray);
+  font-size: clamp(0.82rem, 2.3vw, 0.92rem);
+  margin-top: 0.15rem;
+}
+
+.workout-item-region {
+  color: var(--bordeaux);
+  font-size: clamp(0.78rem, 2.2vw, 0.88rem);
+  font-weight: 600;
+}
+
+.workout-item-desc {
+  display: none;
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--gray-light);
+  font-size: clamp(0.85rem, 2.4vw, 0.95rem);
+  color: #555;
+  line-height: 1.5;
+}
+
+.workout-item-desc.open {
+  display: block;
+}
+
+.workout-item-actions {
+  flex-shrink: 0;
+  padding-top: 0.15rem;
+}
+
+/* Progress bar */
+.progress-bar {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+  font-size: clamp(1.1rem, 3vw, 1.3rem);
+}
+
+.progress-star {
+  opacity: 0.25;
+  transition: all 0.4s ease;
+  filter: grayscale(1);
+}
+
+.progress-star.earned {
+  opacity: 1;
+  filter: grayscale(0);
+  animation: starPop 0.4s ease;
+}
+
+@keyframes starPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+
+.progress-label {
+  font-family: 'Raleway', sans-serif;
+  font-weight: 600;
+  font-size: clamp(0.8rem, 2.2vw, 0.95rem);
+  color: var(--gray);
+  margin-left: 0.4rem;
+}
+
+/* Exercise screen */
+.exercise-container {
+  text-align: center;
+  width: 100%;
+  max-width: 420px;
+}
+
+.exercise-name {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+  font-weight: 800;
+  color: var(--petrol-dark);
+  margin-bottom: 0.2rem;
+}
+
+.exercise-side {
+  font-size: clamp(1rem, 3vw, 1.2rem);
+  color: var(--bordeaux);
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+
+.exercise-english {
+  font-style: italic;
+  font-size: clamp(0.95rem, 2.8vw, 1.1rem);
+  color: var(--gray);
+  margin-bottom: 1rem;
+}
+
+.exercise-desc {
+  display: none;
+  text-align: left;
+  background: var(--white);
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin: 0.8rem 0;
+  font-size: clamp(0.88rem, 2.5vw, 0.98rem);
+  color: #555;
+  line-height: 1.55;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.exercise-desc.open {
+  display: block;
+}
+
+.exercise-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.exercise-meta-item {
+  font-size: clamp(0.82rem, 2.3vw, 0.92rem);
+  color: #666;
+  line-height: 1.4;
+}
+
+.exercise-meta-item.hardcore {
+  color: var(--bordeaux);
+  font-weight: 600;
+  font-size: clamp(0.8rem, 2.2vw, 0.88rem);
+}
+
+.exercise-duration {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(1.1rem, 3.2vw, 1.3rem);
+  font-weight: 700;
+  color: var(--petrol-dark);
+}
+
+/* Stopwatch */
+.stopwatch {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(2.8rem, 10vw, 4rem);
+  font-weight: 800;
+  color: var(--petrol);
+  margin: 1rem 0;
+  letter-spacing: 2px;
+  min-height: 4.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stopwatch.countdown {
+  color: var(--bordeaux);
+  animation: pulse 0.8s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+/* Exercise counter */
+.exercise-counter {
+  font-size: clamp(0.78rem, 2.1vw, 0.88rem);
+  color: var(--gray);
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+/* Feedback screen */
+.feedback-text {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(2rem, 7vw, 3rem);
+  font-weight: 800;
+  color: var(--petrol);
+  animation: feedbackPop 0.5s ease;
+}
+
+@keyframes feedbackPop {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Summary */
+.summary-title {
+  font-family: 'Raleway', sans-serif;
+  font-size: clamp(1.3rem, 4vw, 1.7rem);
+  font-weight: 800;
+  color: var(--petrol-dark);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.summary-list {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 2rem;
+}
+
+.summary-item {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.summary-check {
+  font-size: 1.2rem;
+}
+
+.summary-item-name {
+  font-family: 'Raleway', sans-serif;
+  font-weight: 700;
+  color: var(--petrol-dark);
+  font-size: clamp(0.95rem, 2.8vw, 1.05rem);
+}
+
+.summary-item-english {
+  font-style: italic;
+  font-size: clamp(0.78rem, 2.1vw, 0.88rem);
+  color: var(--gray);
+}
+
+.btn-restart {
+  background: var(--gray-light);
+  color: var(--text-dark);
+  font-size: clamp(0.95rem, 2.8vw, 1.05rem);
+  padding: 0.8rem 2rem;
+  margin-top: 0.5rem;
+}
+
+.btn-restart:hover {
+  background: var(--petrol);
+  color: white;
+}
+
+/* Divider dot */
+.dot-sep {
+  margin: 0 0.3rem;
+  color: var(--gray);
+}
+
+/* Back button */
+.btn-back {
+  position: absolute;
+  top: 1.2rem;
+  left: 1.2rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--gray);
+  transition: color 0.2s;
+  z-index: 10;
+}
+
+.btn-back:hover {
+  color: var(--petrol);
+}
+
+.screen {
+  position: relative;
+}
+</style>
+</head>
+<body>
+
+<!-- Screen 1: Category -->
+<div id="screen-category" class="screen active">
+  <div class="app-title">Lazy Ass Workout App</div>
+  <div class="app-subtitle">15 Minuten reichen.</div>
+  <div class="step-label">Was wird's heute?</div>
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="selectCategory('Kraft')">💪 Kraft</button>
+    <button class="btn btn-secondary" onclick="selectCategory('Mobilität')">🧘 Mobilität</button>
+  </div>
+</div>
+
+<!-- Screen 2: Body Region -->
+<div id="screen-region" class="screen">
+  <button class="btn-back" onclick="goBack('screen-category')" aria-label="Zurück">←</button>
+  <div class="app-title">Lazy Ass Workout App</div>
+  <div class="app-subtitle" id="chosen-category-label"></div>
+  <div class="step-label">Welcher Bereich?</div>
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="selectRegion('Oberkörper')">🔼 Oberkörper</button>
+    <button class="btn btn-secondary" onclick="selectRegion('Unterkörper')">🔽 Unterkörper</button>
+  </div>
+</div>
+
+<!-- Screen 3: Workout List -->
+<div id="screen-workout" class="screen">
+  <button class="btn-back" onclick="goBack('screen-region')" aria-label="Zurück">←</button>
+  <div class="app-title">Dein Workout</div>
+  <div class="app-subtitle" id="workout-subtitle"></div>
+  <div class="workout-list" id="workout-list"></div>
+  <button class="btn btn-start" onclick="startWorkout()">👌 Start</button>
+</div>
+
+<!-- Screen 4: Exercise -->
+<div id="screen-exercise" class="screen">
+  <div class="progress-bar" id="progress-bar"></div>
+  <div class="exercise-counter" id="exercise-counter"></div>
+  <div class="exercise-container">
+    <div class="exercise-name" id="ex-name"></div>
+    <div class="exercise-side" id="ex-side"></div>
+    <div class="exercise-english" id="ex-english"></div>
+    <button class="btn-desc-toggle" id="ex-desc-toggle" onclick="toggleExerciseDesc()">📜 Beschreibung</button>
+    <div class="exercise-desc" id="ex-desc"></div>
+    <div class="exercise-meta">
+      <div class="exercise-meta-item hardcore" id="ex-hardcore"></div>
+      <div class="exercise-meta-item" id="ex-region"></div>
+      <div class="exercise-duration" id="ex-duration"></div>
+    </div>
+    <div class="stopwatch" id="stopwatch" style="display:none;">0:00</div>
+    <button class="btn btn-done" id="btn-done" onclick="finishExercise()" style="display:none;">✌️ Fertig</button>
+  </div>
+</div>
+
+<!-- Screen 5: Feedback -->
+<div id="screen-feedback" class="screen">
+  <div class="feedback-text">Super ✅</div>
+</div>
+
+<!-- Screen 6: Summary -->
+<div id="screen-summary" class="screen">
+  <div class="summary-title">Das hast du heute geschafft! 🎉</div>
+  <div class="summary-list" id="summary-list"></div>
+  <button class="btn btn-finish" onclick="showScreen('screen-summary')" style="display:none;" id="btn-finished-final">🏁 Geschafft!</button>
+  <button class="btn btn-restart" onclick="restart()">🔄 Startseite</button>
+</div>
+
+<!-- Screen 7: Final exercise with finish button -->
+<div id="screen-final" class="screen">
+  <div class="feedback-text">Richtig gut!</div>
+  <button class="btn btn-finish" onclick="showSummary()" style="margin-top:1.5rem;">🏁 Geschafft!</button>
+</div>
+
+<script>
+// ============================================================
+// EXERCISE DATABASE
+// ============================================================
+const exercises = [
+  {
+    name: "Kniebeugen",
+    english: "Squats",
+    duration: "8 Wiederholungen",
+    durationtype: "reps",
+    seconds: 0,
+    description: "Langsame Kniebeugen, Po nach hinten schieben (als ob du dich setzt), Rücken gerade, Knie stabil.",
+    sideSwitch: false,
+    category: ["Kraft"],
+    bodyArea: ["Unterkörper"],
+    region: "Beine, Po",
+    hardcore: "Kurzhantel vor der Brust halten (Goblet Squat)",
+    alternatives: ["Wandsitz", "Treppensteigen"]
+  },
+  {
+    name: "Beckenheben",
+    english: "Glute Bridge",
+    duration: "10 Wiederholungen",
+    durationtype: "reps",
+    seconds: 0,
+    description: "Rückenlage, Beine aufgestellt. Becken heben, bis Oberschenkel und Oberkörper eine Linie bilden. Po oben fest anspannen.",
+    sideSwitch: false,
+    category: ["Kraft", "Mobilität"],
+    bodyArea: ["Unterkörper"],
+    region: "Po, unterer Rücken",
+    hardcore: "Einbeinig ausführen (ein Bein in die Luft strecken)",
+    alternatives: ["Rumänisches Kreuzheben"]
+  },
+  {
+    name: "Kindspose",
+    english: "Child's Pose",
+    duration: "60 Sekunden",
+    durationtype: "time",
+    seconds: 60,
+    description: "Sitz auf den Knien, Arme neben dem Körper ablegen, Gesicht nach unten, Rücken lang machen, auf Beinen sitzen bleiben.",
+    sideSwitch: false,
+    category: ["Mobilität"],
+    bodyArea: ["Oberkörper"],
+    region: "Rücken",
+    hardcore: "Arme auf dem Boden nach vorn strecken",
+    alternatives: ["Offenes Buch"]
+  },
+  {
+    name: "Seitliches Beinheben",
+    english: "Side Leg Raise",
+    duration: "10 Wiederholungen",
+    durationtype: "reps",
+    seconds: 0,
+    description: "Seitenlage, Beine gestreckt. Das obere Bein langsam und kontrolliert heben und senken, ohne Schwung.",
+    sideSwitch: true,
+    category: ["Kraft"],
+    bodyArea: ["Unterkörper"],
+    region: "Beine, Po",
+    hardcore: "Widerstandsband um die Knöchel legen",
+    alternatives: ["Muschel"]
+  },
+  {
+    name: "Unterarmstütz",
+    english: "Plank",
+    duration: "30 Sekunden",
+    durationtype: "time",
+    seconds: 30,
+    description: "Auf Unterarme und Fußspitzen (einfacher: Knie) stützen. Körper bildet eine gerade Linie, Bauch und Po fest anspannen (kein Hohlkreuz).",
+    sideSwitch: false,
+    category: ["Kraft"],
+    bodyArea: ["Oberkörper", "Unterkörper"],
+    region: "Core, Schultern",
+    hardcore: "Länger halten oder abwechselnd ein Bein leicht anheben",
+    alternatives: ["Toter Käfer", "Boot"]
+  },
+  {
+    name: "Rumänisches Kreuzheben",
+    english: "Romanian Deadlift",
+    duration: "10 Wiederholungen",
+    durationtype: "reps",
+    seconds: 0,
+    description: "Hüftbreiter Stand, Knie minimal gebeugt. Oberkörper gerade nach vorne neigen, Gewicht mit langen Armen an Beinen entlang führen. Gesäß weit nach hinten schieben.",
+    sideSwitch: false,
+    category: ["Kraft"],
+    bodyArea: ["Unterkörper"],
+    region: "Beine, Po, unterer Rücken",
+    hardcore: "Mehr Gewicht",
+    alternatives: ["Beckenheben"]
+  },
+  {
+    name: "Krieger II",
+    english: "Warrior II",
+    duration: "60 Sekunden",
+    durationtype: "time",
+    seconds: 60,
+    description: "Füße weit auseinander stellen, vorderen Fuß um 90 Grad drehen. Vorderes Knie beugen (über dem Knöchel), hinteres Bein gestreckt. Arme parallel zum Boden, Rumpf aufrecht.",
+    sideSwitch: true,
+    category: ["Mobilität"],
+    bodyArea: ["Unterkörper"],
+    region: "Beine, Po, Hüfte",
+    hardcore: "Tiefer in den Ausfallschritt gehen",
+    alternatives: ["Statischer Ausfallschritt"]
+  },
+  {
+    name: "Herabschauender Hund",
+    english: "Downward Dog",
+    duration: "30 Sekunden",
+    durationtype: "time",
+    seconds: 30,
+    description: "Aus dem Vierfüßlerstand das Becken nach oben schieben. Körper bildet ein umgedrehtes \"V\". Rücken extrem lang machen, Fersen ziehen Richtung Boden.",
+    sideSwitch: false,
+    category: ["Mobilität"],
+    bodyArea: ["Oberkörper", "Unterkörper"],
+    region: "Schultern, Rücken, Beine",
+    hardcore: "Ein Bein gestreckt in die Luft heben (Dreibeiniger Hund)",
+    alternatives: ["Vorwärtsbeuge im Stehen"]
+  },
+  {
+    name: "Tiefer Ausfallschritt",
+    english: "Low Lunge",
+    duration: "30 Sekunden",
+    durationtype: "time",
+    seconds: 30,
+    description: "Großer Ausfallschritt, hinteres Knie und Fußrücken auf dem Boden ablegen. Das Becken langsam nach vorne und unten sinken lassen.",
+    sideSwitch: true,
+    category: ["Mobilität"],
+    bodyArea: ["Unterkörper"],
+    region: "Hüfte, Beine",
+    hardcore: "Hinteres Knie vom Boden abheben (High Lunge)",
+    alternatives: ["Krieger II"]
+  },
+  {
+    name: "Taubensitz",
+    english: "Pigeon Pose",
+    duration: "60 Sekunden",
+    durationtype: "time",
+    seconds: 60,
+    description: "Ein Bein angewinkelt vor dem Körper ablegen, das andere Bein lang nach hinten ausstrecken. Oberkörper gerade halten oder langsam über dem vorderen Bein ablegen.",
+    sideSwitch: true,
+    category: ["Mobilität"],
+    bodyArea: ["Unterkörper"],
+    region: "Po, Hüfte",
+    hardcore: "Den hinteren Fuß mit der Hand greifen und Richtung Gesäß ziehen",
+    alternatives: ["Nadelöhr-Dehnung"]
+  },
+  {
+    name: "Ausfallschritte nach hinten",
+    english: "Reverse Lunges",
+    duration: "10 Wiederholungen",
+    durationtype: "reps",
+    seconds: 0,
+    description: "Großer Schritt nach hinten, hinteres Knie fast zum Boden absenken. Vorderes Knie bleibt über dem Fußgelenk. Hinteres Knie langsam wieder anheben.",
+    sideSwitch: true,
+    category: ["Kraft"],
+    bodyArea: ["Unterkörper"],
+    region: "Beine, Po",
+    hardcore: "Kurzhanteln halten",
+    alternatives: ["Statischer Ausfallschritt"]
+  },
+  {
+    name: "Seitlicher Unterarmstütz",
+    english: "Side Plank",
+    duration: "30 Sekunden",
+    durationtype: "time",
+    seconds: 30,
+    description: "Stütz auf einem Unterarm und der Fußaußenseite. Becken heben, bis der Körper eine gerade Linie bildet.",
+    sideSwitch: true,
+    category: ["Kraft", "Mobilität"],
+    bodyArea: ["Oberkörper"],
+    region: "Seitliche Bauchmuskeln, Schulter",
+    hardcore: "Das obere Bein und den oberen Arm in die Luft strecken (Stern)",
+    alternatives: ["Seitliches Beinheben"]
+  },
+  {
+    name: "Toter Käfer",
+    english: "Dead Bug",
+    duration: "10 Wiederholungen",
+    durationtype: "reps",
+    seconds: 0,
+    description: "Rückenlage. Arme senkrecht zur Decke, Knie 90 Grad in der Luft. Rechten Arm und linkes Bein gleichzeitig Richtung Boden absenken. Unterer Rücken bleibt in den Boden gepresst!",
+    sideSwitch: false,
+    category: ["Mobilität", "Kraft"],
+    bodyArea: ["Oberkörper", "Unterkörper"],
+    region: "Bauch, Core",
+    hardcore: "Beide Arme und beide Beine gleichzeitig ausstrecken (Hollow Body)",
+    alternatives: ["Unterarmstütz"]
+  },
+  {
+    name: "Offenes Buch",
+    english: "Open Book",
+    duration: "10 Wiederholungen",
+    durationtype: "reps",
+    seconds: 0,
+    description: "Seitenlage, Knie im 90 Grad-Winkel übereinander. Arme gestreckt vor der Brust aufeinander. Oberen Arm wie einen Buchdeckel nach hinten aufklappen, Blick folgt der Hand.",
+    sideSwitch: true,
+    category: ["Mobilität"],
+    bodyArea: ["Oberkörper"],
+    region: "Rücken",
+    hardcore: "In der maximalen Öffnung 30 Sekunden verweilen und tief atmen",
+    alternatives: ["Nadelöhr"]
+  },
+  {
+    name: "Vogel-Hund",
+    english: "Bird-Dog",
+    duration: "10 Wiederholungen",
+    durationtype: "reps",
+    seconds: 0,
+    description: "Vierfüßlerstand. Rechten Arm nach vorne und linkes Bein nach hinten strecken, bis sie parallel zum Boden sind. Kein Hohlkreuz! Kontrolliert wieder absetzen.",
+    sideSwitch: false,
+    category: ["Kraft"],
+    bodyArea: ["Oberkörper", "Unterkörper"],
+    region: "Unterer Rücken, Core",
+    hardcore: "Knie und Ellenbogen in der Luft unter dem Bauch zusammenführen und wieder strecken",
+    alternatives: ["Unterarmstütz"]
+  },
+  {
+    name: "Boot",
+    english: "Navasana",
+    duration: "30 Sekunden",
+    durationtype: "time",
+    seconds: 30,
+    description: "Im Sitzen den geraden Rücken leicht nach hinten lehnen. Unterschenkel parallel zum Boden anheben, Arme nach vorne ausstrecken. Auf den Sitzhöckern balancieren.",
+    sideSwitch: false,
+    category: ["Kraft"],
+    bodyArea: ["Oberkörper", "Unterkörper"],
+    region: "Core, Bauchmuskeln, Hüfte",
+    hardcore: "Die Beine komplett durchstrecken (V-Sitz)",
+    alternatives: ["Toter Käfer", "Unterarmstütz"]
+  },
+  {
+    name: "Statischer Ausfallschritt",
+    english: "Split Squat",
+    duration: "10 Wiederholungen",
+    durationtype: "reps",
+    seconds: 0,
+    description: "Weite Schrittstellung. Mit einer Hand festhalten. Das hintere Knie wie einen Fahrstuhl gerade Richtung Boden senken und wieder hochdrücken.",
+    sideSwitch: true,
+    category: ["Mobilität"],
+    bodyArea: ["Unterkörper"],
+    region: "Beine, Po",
+    hardcore: "Ohne Festhalten ausführen oder eine Kurzhantel in die freie Hand nehmen",
+    alternatives: ["Ausfallschritte nach hinten"]
+  },
+  {
+    name: "Muschel",
+    english: "Clamshells",
+    duration: "10 Wiederholungen",
+    durationtype: "reps",
+    seconds: 0,
+    description: "Seitenlage, Knie angewinkelt aufeinander. Füße bleiben zusammen, während das obere Knie langsam Richtung Decke öffnet. Becken darf nicht nach hinten kippen.",
+    sideSwitch: true,
+    category: ["Kraft"],
+    bodyArea: ["Unterkörper"],
+    region: "Po, Hüfte",
+    hardcore: "Ein Widerstandsband knapp oberhalb der Knie anbringen",
+    alternatives: ["Seitliches Beinheben"]
+  },
+  {
+    name: "Liegestütze auf den Knien",
+    english: "Knee Push-Ups",
+    duration: "8 Wiederholungen",
+    durationtype: "reps",
+    seconds: 0,
+    description: "Auf den Bauch legen, Beine anwinkeln, Hände unter die Schultern und mit Blick auf den Boden hochdrücken. Rücken gerade, Kopf stabil.",
+    sideSwitch: false,
+    category: ["Kraft"],
+    bodyArea: ["Oberkörper"],
+    region: "Bizeps, Trizeps, Schultern",
+    hardcore: "Auf Zehenspitzen stellen",
+    alternatives: ["Bizeps-Beugen", "Vorgebeugtes Rudern"]
+  },
+  {
+    name: "Wandsitz",
+    english: "Wall Sit",
+    duration: "30 Sekunden",
+    durationtype: "time",
+    seconds: 30,
+    description: "Mit dem Rücken flach an eine Wand lehnen. Die Beine so weit beugen, bis Knie und Hüfte jeweils einen 90-Grad-Winkel bilden.",
+    sideSwitch: false,
+    category: ["Kraft"],
+    bodyArea: ["Unterkörper"],
+    region: "Beine",
+    hardcore: "Länger halten oder ein Bein abwechselnd nach vorne ausstrecken",
+    alternatives: ["Kniebeugen", "Statischer Ausfallschritt"]
+  },
+  {
+    name: "Vorwärtsbeuge im Sitzen",
+    english: "Pashchimottanasana",
+    duration: "60 Sekunden",
+    durationtype: "time",
+    seconds: 60,
+    description: "Auf den Boden setzen, Beine gerade nach vorne ausstrecken. Mit langem, geradem Rücken nach vorne über die Beine neigen.",
+    sideSwitch: false,
+    category: ["Mobilität"],
+    bodyArea: ["Unterkörper"],
+    region: "Beine, unterer Rücken",
+    hardcore: "Zehen greifen und den Oberkörper komplett auf den Oberschenkeln ablegen",
+    alternatives: ["Herabschauender Hund"]
+  },
+  {
+    name: "Nadelöhr-Dehnung",
+    english: "Figure-4-Stretch",
+    duration: "60 Sekunden",
+    durationtype: "time",
+    seconds: 60,
+    description: "Rückenlage, Füße aufstellen. Den rechten Knöchel auf den linken Oberschenkel legen. Den linken Oberschenkel mit beiden Händen greifen und sanft zur Brust ziehen.",
+    sideSwitch: true,
+    category: ["Mobilität"],
+    bodyArea: ["Unterkörper"],
+    region: "Po, Hüfte",
+    hardcore: "Das herangezogene Bein komplett nach oben zur Decke strecken",
+    alternatives: ["Taubensitz"]
+  },
+  {
+    name: "Überkopf-Trizepsdrücken",
+    english: "Triceps Curls",
+    duration: "10 Wiederholungen",
+    durationtype: "reps",
+    seconds: 0,
+    description: "Aufrechter Stand oder Sitz. Eine Kurzhantel mit beiden Händen über den Kopf strecken. Die Ellbogen beugen, um das Gewicht hinter den Kopf abzusenken.",
+    sideSwitch: false,
+    category: ["Kraft"],
+    bodyArea: ["Oberkörper"],
+    region: "Trizeps",
+    hardcore: "Übung einarmig ausführen",
+    alternatives: ["Liegestütze auf den Knien"]
+  },
+  {
+    name: "Nadelöhr",
+    english: "Thread the Needle",
+    duration: "10 Wiederholungen",
+    durationtype: "reps",
+    seconds: 0,
+    description: "Vierfüßlerstand. Den rechten Arm unter der linken Achsel hindurchschieben, bis die rechte Schulter und Schläfe fast den Boden berühren.",
+    sideSwitch: true,
+    category: ["Mobilität"],
+    bodyArea: ["Oberkörper"],
+    region: "Rücken, Schultern",
+    hardcore: "Den anderen Arm lang nach vorne ausstrecken oder hinter dem Rücken verschränken",
+    alternatives: ["Offenes Buch"]
+  },
+  {
+    name: "Bizeps-Beugen",
+    english: "Biceps Curls",
+    duration: "10 Wiederholungen",
+    durationtype: "reps",
+    seconds: 0,
+    description: "Aufrechter Stand, Arme hängen neben dem Körper, Handflächen zeigen nach vorne. Die Gewichte kontrolliert zu den Schultern beugen, Ellbogen bleiben eng an den Rippen fixiert.",
+    sideSwitch: false,
+    category: ["Kraft"],
+    bodyArea: ["Oberkörper"],
+    region: "Bizeps",
+    hardcore: "Mehr Gewicht",
+    alternatives: ["Liegestütze auf den Knien"]
+  },
+  {
+    name: "Rückenstrecker",
+    english: "Superman",
+    duration: "10 Wiederholungen",
+    durationtype: "reps",
+    seconds: 0,
+    description: "Flache Bauchlage, Beine lang, Arme nach vorne ausgestreckt. Gleichzeitig Arme, Brust und Beine leicht vom Boden abheben. Blick nach unten.",
+    sideSwitch: false,
+    category: ["Kraft"],
+    bodyArea: ["Oberkörper", "Unterkörper"],
+    region: "Unterer Rücken, Core",
+    hardcore: "Am obersten Punkt Arme und Beine wie beim Schwimmen abwechselnd paddeln lassen",
+    alternatives: ["Vogel-Hund"]
+  },
+  {
+    name: "Vorgebeugtes Rudern",
+    english: "Bent-over Row",
+    duration: "10 Wiederholungen",
+    durationtype: "reps",
+    seconds: 0,
+    description: "Hüftbreiter Stand, Knie leicht gebeugt. Oberkörper mit geradem Rücken nach vorne neigen. Ellbogen eng am Körper nach hinten/oben ziehen, Schulterblätter zusammen.",
+    sideSwitch: false,
+    category: ["Kraft"],
+    bodyArea: ["Oberkörper"],
+    region: "Oberer Rücken, Bizeps, Schulter",
+    hardcore: "Halten, mehr Gewicht",
+    alternatives: ["Liegestütze auf den Knien"]
+  },
+  {
+    name: "Vorgebeugtes Seitheben",
+    english: "Reverse Flys",
+    duration: "10 Wiederholungen",
+    durationtype: "reps",
+    seconds: 0,
+    description: "Hüftbreiter Stand, Knie leicht gebeugt. Oberkörper mit geradem Rücken nach vorne neigen. Arme mit leicht gebeugten Ellbogen seitlich bis auf Schulterhöhe anheben.",
+    sideSwitch: false,
+    category: ["Kraft"],
+    bodyArea: ["Oberkörper"],
+    region: "Oberer Rücken, hintere Schulter",
+    hardcore: "Am obersten Punkt 2–3 Sekunden isometrisch halten",
+    alternatives: ["Vorgebeugtes Rudern"]
+  },
+  {
+    name: "Russische Drehung",
+    english: "Russian Twist",
+    duration: "10 Wiederholungen",
+    durationtype: "reps",
+    seconds: 0,
+    description: "Auf den Boden setzen, Oberkörper leicht nach hinten lehnen. Beine anwinkeln, Fersen leicht aufstellen. Abwechselnd den Boden links und rechts neben der Hüfte berühren.",
+    sideSwitch: true,
+    category: ["Kraft"],
+    bodyArea: ["Oberkörper"],
+    region: "Seitliche Bauchmuskeln, Core",
+    hardcore: "Die Füße während der gesamten Übung in der Luft halten",
+    alternatives: ["Seitlicher Unterarmstütz"]
+  },
+  {
+    name: "Vorwärtsbeuge im Stehen",
+    english: "Uttanasana",
+    duration: "60 Sekunden",
+    durationtype: "time",
+    seconds: 60,
+    description: "Hüftbreiter, aufrechter Stand. Mit langem, geradem Rücken aus der Hüfte nach vorne beugen. Die Hände Richtung Boden sinken lassen. Kopf schwer hängen lassen.",
+    sideSwitch: false,
+    category: ["Mobilität"],
+    bodyArea: ["Unterkörper"],
+    region: "Beine, unterer Rücken",
+    hardcore: "Die Beine komplett durchstrecken und den Oberkörper aktiv an die Oberschenkel heranziehen",
+    alternatives: ["Herabschauender Hund", "Vorwärtsbeuge im Sitzen"]
+  }
+];
+
+// ============================================================
+// APP STATE
+// ============================================================
+let chosenCategory = '';
+let chosenRegion = '';
+let currentWorkout = [];
+let currentSet = 0; // 0, 1, 2
+let currentExIndex = 0;
+let stopwatchInterval = null;
+let stopwatchSeconds = 0;
+let countdownInterval = null;
+
+// ============================================================
+// SCREEN TRANSITIONS
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    if (s.classList.contains('active')) {
+      s.classList.add('fade-out');
+      setTimeout(() => {
+        s.classList.remove('active', 'fade-out');
+      }, 300);
+    }
+  });
+  setTimeout(() => {
+    const target = document.getElementById(id);
+    target.classList.add('active');
+  }, 320);
+}
+
+function goBack(targetId) {
+  showScreen(targetId);
+}
+
+// ============================================================
+// STEP 1: CATEGORY
+// ============================================================
+function selectCategory(cat) {
+  chosenCategory = cat;
+  const emoji = cat === 'Kraft' ? '💪' : '🧘';
+  document.getElementById('chosen-category-label').textContent = emoji + ' ' + cat;
+  showScreen('screen-region');
+}
+
+// ============================================================
+// STEP 2: REGION
+// ============================================================
+function selectRegion(region) {
+  chosenRegion = region;
+  generateWorkout();
+  const catEmoji = chosenCategory === 'Kraft' ? '💪' : '🧘';
+  const regEmoji = region === 'Oberkörper' ? '🔼' : '🔽';
+  document.getElementById('workout-subtitle').textContent = catEmoji + ' ' + chosenCategory + '  •  ' + regEmoji + ' ' + region;
+  renderWorkoutList();
+  showScreen('screen-workout');
+}
+
+// ============================================================
+// WORKOUT GENERATION
+// ============================================================
+function generateWorkout() {
+  // Filter exercises matching chosen category AND body area
+  const pool = exercises.filter(ex =>
+    ex.category.includes(chosenCategory) &&
+    ex.bodyArea.includes(chosenRegion)
+  );
+
+  // Shuffle and pick 4-5
+  const shuffled = shuffleArray([...pool]);
+  const count = shuffled.length >= 5 ? 5 : Math.min(shuffled.length, 4);
+  currentWorkout = shuffled.slice(0, count);
+}
+
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ============================================================
+// WORKOUT LIST RENDERING
+// ============================================================
+function renderWorkoutList() {
+  const list = document.getElementById('workout-list');
+  list.innerHTML = '';
+  currentWorkout.forEach((ex, idx) => {
+    const item = document.createElement('div');
+    item.className = 'workout-item';
+    item.id = 'workout-item-' + idx;
+    item.innerHTML = `
+      <div class="workout-item-header">
+        <div class="workout-item-info" onclick="toggleListDesc(${idx})">
+          <div class="workout-item-name">${ex.name}</div>
+          <div>
+            <span class="workout-item-english">${ex.english}</span>
+            <span class="dot-sep">•</span>
+            <span class="workout-item-region">${ex.region}</span>
+          </div>
+        </div>
+        <div class="workout-item-actions">
+          <button class="btn-small" onclick="swapExercise(${idx})">🔀 Ändern</button>
+        </div>
+      </div>
+      <div class="workout-item-desc" id="list-desc-${idx}">${ex.description}</div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function toggleListDesc(idx) {
+  document.getElementById('list-desc-' + idx).classList.toggle('open');
+}
+
+function swapExercise(idx) {
+  const current = currentWorkout[idx];
+  const usedNames = currentWorkout.map(e => e.name);
+
+  // Try to find a named alternative first
+  let replacement = null;
+  for (const altName of current.alternatives) {
+    const alt = exercises.find(e =>
+      e.name === altName && !usedNames.includes(e.name)
+    );
+    if (alt) {
+      replacement = alt;
+      break;
+    }
+  }
+
+  // Fallback: find any matching exercise not already in the workout
+  if (!replacement) {
+    const pool = exercises.filter(e =>
+      e.category.includes(chosenCategory) &&
+      e.bodyArea.includes(chosenRegion) &&
+      !usedNames.includes(e.name)
+    );
+    if (pool.length > 0) {
+      replacement = pool[Math.floor(Math.random() * pool.length)];
+    }
+  }
+
+  if (replacement) {
+    currentWorkout[idx] = replacement;
+    renderWorkoutList();
+  }
+}
+
+// ============================================================
+// WORKOUT EXECUTION
+// ============================================================
+function startWorkout() {
+  currentSet = 0;
+  currentExIndex = 0;
+  showExercise();
+}
+
+function showExercise() {
+  clearTimers();
+  const ex = currentWorkout[currentExIndex];
+  const totalSets = 3;
+
+  // Progress bar
+  const progressBar = document.getElementById('progress-bar');
+  let starsHtml = '';
+  for (let i = 0; i < totalSets; i++) {
+    starsHtml += `<span class="progress-star ${i <= currentSet ? 'earned' : ''}">⭐</span>`;
+  }
+  starsHtml += `<span class="progress-label">Satz ${currentSet + 1} / ${totalSets}</span>`;
+  progressBar.innerHTML = starsHtml;
+
+  // Exercise counter
+  document.getElementById('exercise-counter').textContent =
+    `Übung ${currentExIndex + 1} von ${currentWorkout.length}`;
+
+  // Name & side
+  document.getElementById('ex-name').textContent = ex.name;
+  let sideText = '';
+  if (ex.sideSwitch) {
+    if (currentSet === 0) sideText = '(rechts)';
+    else if (currentSet === 1) sideText = '(links)';
+    else sideText = '(beidseitig)';
+  }
+  document.getElementById('ex-side').textContent = sideText;
+  document.getElementById('ex-english').textContent = ex.english;
+
+  // Description
+  document.getElementById('ex-desc').textContent = ex.description;
+  document.getElementById('ex-desc').classList.remove('open');
+
+  // Meta
+  document.getElementById('ex-hardcore').textContent = '🔥 ' + ex.hardcore;
+  document.getElementById('ex-region').textContent = '🎯 ' + ex.region;
+  document.getElementById('ex-duration').textContent = '⏱ ' + ex.duration;
+
+  // Stopwatch
+  const stopwatchEl = document.getElementById('stopwatch');
+  const btnDone = document.getElementById('btn-done');
+
+  if (ex.durationtype === 'time') {
+    stopwatchEl.style.display = 'flex';
+    stopwatchEl.textContent = '6';
+    stopwatchEl.classList.add('countdown');
+    btnDone.style.display = 'none';
+
+    // Countdown from 6
+    let cd = 6;
+    countdownInterval = setInterval(() => {
+      cd--;
+      if (cd > 0) {
+        stopwatchEl.textContent = cd;
+      } else {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+        stopwatchEl.classList.remove('countdown');
+        stopwatchSeconds = 0;
+        stopwatchEl.textContent = '0:00';
+        btnDone.style.display = 'block';
+        // Start counting up
+        stopwatchInterval = setInterval(() => {
+          stopwatchSeconds++;
+          const m = Math.floor(stopwatchSeconds / 60);
+          const s = stopwatchSeconds % 60;
+          stopwatchEl.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+        }, 1000);
+      }
+    }, 1000);
+  } else {
+    stopwatchEl.style.display = 'none';
+    btnDone.style.display = 'block';
+  }
+
+  showScreen('screen-exercise');
+}
+
+function toggleExerciseDesc() {
+  document.getElementById('ex-desc').classList.toggle('open');
+}
+
+function clearTimers() {
+  if (stopwatchInterval) { clearInterval(stopwatchInterval); stopwatchInterval = null; }
+  if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+}
+
+function finishExercise() {
+  clearTimers();
+
+  // Check if this is the very last exercise of the very last set
+  const isLastExercise = currentExIndex === currentWorkout.length - 1;
+  const isLastSet = currentSet === 2;
+
+  if (isLastExercise && isLastSet) {
+    // Show feedback then final screen
+    showScreen('screen-feedback');
+    setTimeout(() => {
+      showScreen('screen-final');
+    }, 1200);
+    return;
+  }
+
+  // Show feedback
+  showScreen('screen-feedback');
+
+  setTimeout(() => {
+    // Advance to next exercise or next set
+    if (currentExIndex < currentWorkout.length - 1) {
+      currentExIndex++;
+    } else {
+      // Next set
+      currentSet++;
+      currentExIndex = 0;
+    }
+    showExercise();
+  }, 1200);
+}
+
+// ============================================================
+// SUMMARY
+// ============================================================
+function showSummary() {
+  const list = document.getElementById('summary-list');
+  list.innerHTML = '';
+  currentWorkout.forEach(ex => {
+    const item = document.createElement('div');
+    item.className = 'summary-item';
+    item.innerHTML = `
+      <span class="summary-check">✅</span>
+      <div>
+        <div class="summary-item-name">${ex.name}</div>
+        <div class="summary-item-english">${ex.english}</div>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+  showScreen('screen-summary');
+}
+
+function restart() {
+  chosenCategory = '';
+  chosenRegion = '';
+  currentWorkout = [];
+  currentSet = 0;
+  currentExIndex = 0;
+  clearTimers();
+  showScreen('screen-category');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('screen-category').classList.add('active');
+});
+</script>
+</body>
+</html>
