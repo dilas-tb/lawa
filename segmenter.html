@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Streckenabschnitts-Rechner</title>
+<style>
+  :root {
+    --petrol: #1f6f7a;
+    --petrol-dark: #155058;
+    --bordeaux: #7b1e3a;
+    --white: #ffffff;
+    --bg: #f5f8f9;
+    --text: #1c2e32;
+    --border: #d9e3e5;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 2rem 1rem;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+    background: var(--white);
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: 0 4px 20px rgba(31, 111, 122, 0.08);
+  }
+
+  h1 {
+    color: var(--petrol);
+    font-weight: 300;
+    font-size: 1.8rem;
+    margin: 0 0 0.25rem;
+    letter-spacing: 0.5px;
+  }
+
+  .subtitle {
+    color: var(--bordeaux);
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+
+  label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--petrol);
+    margin-bottom: 0.4rem;
+    font-weight: 500;
+  }
+
+  input[type="number"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 1rem;
+    background: var(--white);
+    transition: border-color 0.2s;
+    color: var(--text);
+  }
+
+  input[type="number"]:focus {
+    outline: none;
+    border-color: var(--petrol);
+  }
+
+  button {
+    width: 100%;
+    padding: 0.85rem;
+    margin-top: 0.75rem;
+    background: var(--petrol);
+    color: var(--white);
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: background 0.2s;
+  }
+
+  button:hover {
+    background: var(--petrol-dark);
+  }
+
+  .results {
+    margin-top: 2rem;
+    border-top: 2px solid var(--bordeaux);
+    padding-top: 1.5rem;
+  }
+
+  .results-title {
+    font-size: 0.85rem;
+    color: var(--bordeaux);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .result-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .result-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.6rem 0.9rem;
+    background: var(--bg);
+    border-left: 3px solid var(--petrol);
+    border-radius: 4px;
+    font-size: 0.95rem;
+  }
+
+  .result-item:nth-child(5n) {
+    border-left-color: var(--bordeaux);
+  }
+
+  .result-index {
+    color: var(--petrol);
+    font-weight: 500;
+  }
+
+  .result-value {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 480px) {
+    .container { padding: 1.5rem; }
+    .result-list { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Streckenabschnitts-Rechner</h1>
+    <div class="subtitle">Einteilung leicht gemacht</div>
+
+    <div class="form-group">
+      <label for="start">Ausgangswert</label>
+      <input type="number" id="start" value="0" step="any">
+    </div>
+
+    <div class="form-group">
+      <label for="length">Länge des Streckenabschnitts</label>
+      <input type="number" id="length" placeholder="z. B. 25" step="any">
+    </div>
+
+    <button id="calcBtn">Berechnen</button>
+
+    <div class="results" id="results" style="display:none;">
+      <div class="results-title">Ergebnisse</div>
+      <div class="result-list" id="resultList"></div>
+    </div>
+  </div>
+
+<script>
+  const btn = document.getElementById('calcBtn');
+  const results = document.getElementById('results');
+  const resultList = document.getElementById('resultList');
+
+  btn.addEventListener('click', () => {
+    const start = parseFloat(document.getElementById('start').value) || 0;
+    const length = parseFloat(document.getElementById('length').value);
+
+    if (isNaN(length)) {
+      alert('Bitte eine gültige Länge eingeben.');
+      return;
+    }
+
+    resultList.innerHTML = '';
+    for (let i = 1; i <= 20; i++) {
+      const value = start + (length * i);
+      const item = document.createElement('div');
+      item.className = 'result-item';
+      item.innerHTML = `
+        <span class="result-index">${i}.</span>
+        <span class="result-value">${Number.isInteger(value) ? value : value.toFixed(2)}</span>
+      `;
+      resultList.appendChild(item);
+    }
+    results.style.display = 'block';
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') btn.click();
+  });
+</script>
+</body>
+</html>
