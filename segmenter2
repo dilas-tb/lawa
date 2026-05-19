@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regal-Rechner für Tischler</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #f5e6d3 0%, #e8d0b3 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #3d2817;
+  }
+  .container {
+    max-width: 700px;
+    margin: 0 auto;
+    background: #fffaf3;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(61, 40, 23, 0.2);
+    overflow: hidden;
+  }
+  header {
+    background: linear-gradient(135deg, #8b5a3c 0%, #6b4423 100%);
+    color: #fffaf3;
+    padding: 30px;
+    text-align: center;
+  }
+  header h1 { font-size: 1.8rem; margin-bottom: 8px; }
+  header p { opacity: 0.9; font-size: 0.95rem; }
+  .content { padding: 30px; }
+  .form-group { margin-bottom: 20px; }
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #6b4423;
+  }
+  input[type="number"] {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #d4b896;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: #fffaf3;
+    color: #3d2817;
+    transition: border-color 0.2s;
+  }
+  input[type="number"]:focus {
+    outline: none;
+    border-color: #8b5a3c;
+  }
+  button {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #8b5a3c 0%, #6b4423 100%);
+    color: #fffaf3;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+    margin-top: 10px;
+  }
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(107, 68, 35, 0.4);
+  }
+  .results {
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 2px dashed #d4b896;
+  }
+  .results h2 {
+    color: #6b4423;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+  }
+  .summary {
+    background: #f5e6d3;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+  }
+  .summary strong { color: #6b4423; }
+  .mark-list {
+    list-style: none;
+    counter-reset: mark-counter;
+  }
+  .mark-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    background: #fffaf3;
+    border: 2px solid #e8d0b3;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .mark-item:hover { background: #f9f0e1; }
+  .mark-number {
+    background: #8b5a3c;
+    color: #fffaf3;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    margin-right: 16px;
+    flex-shrink: 0;
+  }
+  .mark-label { flex: 1; font-size: 0.95rem; }
+  .mark-value {
+    font-weight: 700;
+    color: #6b4423;
+    font-size: 1.05rem;
+  }
+  .mark-item.board { background: #efdcc2; border-color: #d4b896; }
+  .error {
+    background: #f8d7da;
+    color: #842029;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 15px;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🪚 Regal-Einteilung</h1>
+      <p>Berechne und markiere gleichmäßige Fächer für dein Regal</p>
+    </header>
+    <div class="content">
+      <div class="form-group">
+        <label for="totalLength">Gesamtlänge der Strecke (mm)</label>
+        <input type="number" id="totalLength" min="1" step="0.1" placeholder="z. B. 2000">
+      </div>
+      <div class="form-group">
+        <label for="numCompartments">Anzahl der Fächer</label>
+        <input type="number" id="numCompartments" min="1" step="1" placeholder="z. B. 5">
+      </div>
+      <div class="form-group">
+        <label for="boardThickness">Dicke der Zwischenböden (mm)</label>
+        <input type="number" id="boardThickness" min="0" step="0.1" placeholder="z. B. 18">
+      </div>
+      <button onclick="calculate()">Berechnen</button>
+      <div id="output"></div>
+    </div>
+  </div>
+
+<script>
+function calculate() {
+  const total = parseFloat(document.getElementById('totalLength').value);
+  const n = parseInt(document.getElementById('numCompartments').value);
+  const t = parseFloat(document.getElementById('boardThickness').value);
+  const output = document.getElementById('output');
+
+  if (isNaN(total) || isNaN(n) || isNaN(t) || total <= 0 || n < 1 || t < 0) {
+    output.innerHTML = '<div class="error">Bitte gib gültige positive Werte ein.</div>';
+    return;
+  }
+
+  // n Fächer => n+1 Bretter (inkl. Anfang und Ende)
+  const numBoards = n + 1;
+  const totalBoardThickness = numBoards * t;
+
+  if (totalBoardThickness >= total) {
+    output.innerHTML = '<div class="error">Die Bretter sind zusammen dicker als die Gesamtlänge. Bitte Werte prüfen.</div>';
+    return;
+  }
+
+  const compartmentHeight = (total - totalBoardThickness) / n;
+
+  // Markierungen ab Position 0:
+  // 1: 0 (Anfang)
+  // 2: t (Ende erstes Brett)
+  // 3: t + h (Beginn nächstes Brett)
+  // 4: t + h + t
+  // ...
+  // Letzter: total
+  let marks = [];
+  let pos = 0;
+  marks.push({ label: 'Anfang (Oberkante 1. Brett)', value: 0, board: true });
+  marks.push({ label: 'Unterkante 1. Brett', value: t, board: true });
+
+  for (let i = 1; i <= n; i++) {
+    pos = t + (i-1)*(t + compartmentHeight) + compartmentHeight;
+    // Oberkante des nächsten Brettes
+    const oben = t * i + compartmentHeight * i - t; // alternativ einfacher unten
+  }
+
+  // Sauberer Aufbau:
+  marks = [];
+  let cursor = 0;
+  // Brett 1: 0 .. t
+  marks.push({ label: 'Oberkante Brett 1 (Start)', value: 0, board: true });
+  cursor = t;
+  marks.push({ label: 'Unterkante Brett 1', value: round(cursor), board: true });
+
+  for (let i = 1; i <= n; i++) {
+    cursor += compartmentHeight;
+    if (i < n) {
+      marks.push({ label: `Oberkante Brett ${i+1}`, value: round(cursor), board: true });
+      cursor += t;
+      marks.push({ label: `Unterkante Brett ${i+1}`, value: round(cursor), board: true });
+    } else {
+      // letztes Brett
+      marks.push({ label: `Oberkante Brett ${i+1}`, value: round(cursor), board: true });
+      cursor += t;
+      marks.push({ label: `Unterkante Brett ${i+1} (Ende)`, value: round(cursor), board: true });
+    }
+  }
+
+  let html = `
+    <div class="results">
+      <h2>Ergebnis</h2>
+      <div class="summary">
+        <div><strong>Fachhöhe:</strong> ${round(compartmentHeight)} mm</div>
+        <div><strong>Anzahl Bretter:</strong> ${numBoards}</div>
+        <div><strong>Anzahl Fächer:</strong> ${n}</div>
+      </div>
+      <h2>Markierungen (von Anfang)</h2>
+      <ol class="mark-list">
+  `;
+  marks.forEach((m, idx) => {
+    html += `
+      <li class="mark-item board">
+        <div class="mark-number">${idx+1}</div>
+        <div class="mark-label">${m.label}</div>
+        <div class="mark-value">${m.value} mm</div>
+      </li>
+    `;
+  });
+  html += '</ol></div>';
+  output.innerHTML = html;
+}
+
+function round(v) {
+  return Math.round(v * 100) / 100;
+}
+</script>
+</body>
+</html>
