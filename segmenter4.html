@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regal-Rechner für Tischler</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #f5e6d3 0%, #e8d0b3 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #3d2817;
+  }
+  .container {
+    max-width: 820px;
+    margin: 0 auto;
+    background: #fffaf3;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(61, 40, 23, 0.2);
+    overflow: hidden;
+  }
+  header {
+    background: linear-gradient(135deg, #8b5a3c 0%, #6b4423 100%);
+    color: #fffaf3;
+    padding: 30px;
+    text-align: center;
+  }
+  header h1 { font-size: 1.8rem; margin-bottom: 8px; }
+  header p { opacity: 0.9; font-size: 0.95rem; }
+  .content { padding: 30px; }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+  }
+  .form-group { margin-bottom: 15px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #6b4423;
+    font-size: 0.95rem;
+  }
+  input[type="number"] {
+    width: 100%;
+    padding: 11px 14px;
+    border: 2px solid #d4b896;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: #fffaf3;
+    color: #3d2817;
+    transition: border-color 0.2s;
+  }
+  input[type="number"]:focus {
+    outline: none;
+    border-color: #8b5a3c;
+  }
+  details.advanced {
+    margin: 10px 0 20px;
+    background: #f9f0e1;
+    border-radius: 10px;
+    padding: 0;
+    border: 1px solid #e8d0b3;
+  }
+  details.advanced summary {
+    cursor: pointer;
+    padding: 12px 16px;
+    font-weight: 600;
+    color: #6b4423;
+    user-select: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  details.advanced summary::before {
+    content: '▸';
+    transition: transform 0.2s;
+  }
+  details.advanced[open] summary::before {
+    transform: rotate(90deg);
+  }
+  details.advanced .details-content {
+    padding: 0 16px 16px;
+  }
+  .custom-heights {
+    display: none;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f9f0e1;
+    border-radius: 10px;
+    border: 1px solid #e8d0b3;
+  }
+  .custom-heights.visible { display: block; }
+  .custom-heights h3 {
+    color: #6b4423;
+    font-size: 1rem;
+    margin-bottom: 10px;
+  }
+  .custom-heights p.hint {
+    font-size: 0.85rem;
+    color: #8b6f4e;
+    margin-bottom: 12px;
+  }
+  .ch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .ch-item label {
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+  }
+  .ch-item input {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+  }
+  .ch-item input::placeholder { color: #b89875; }
+  .button-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  button {
+    flex: 1;
+    padding: 14px;
+    background: linear-gradient(135deg, #8b5a3c 0%, #6b4423 100%);
+    color: #fffaf3;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s;
+  }
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(107, 68, 35, 0.4);
+  }
+  button.secondary {
+    background: linear-gradient(135deg, #a67c52 0%, #8b5a3c 100%);
+  }
+  .results {
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 2px dashed #d4b896;
+  }
+  .results h2 {
+    color: #6b4423;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+  }
+  .summary {
+    background: #f5e6d3;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
+  }
+  .summary strong { color: #6b4423; }
+  .warning {
+    background: #fbe9d7;
+    border-left: 4px solid #c97f3d;
+    padding: 10px 14px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #6b4423;
+  }
+
+  /* Vorschau */
+  .preview-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 25px 0;
+    padding: 20px;
+    background: #f9f0e1;
+    border-radius: 12px;
+  }
+  .shelf-preview {
+    position: relative;
+    background: #fffaf3;
+    border: 2px solid #6b4423;
+    border-radius: 4px;
+  }
+  .shelf-board {
+    position: absolute;
+    left: 0; right: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      #8b5a3c 0px,
+      #6b4423 8px,
+      #8b5a3c 16px
+    );
+    border-top: 1px solid #3d2817;
+    border-bottom: 1px solid #3d2817;
+    cursor: pointer;
+    transition: filter 0.15s;
+  }
+  .shelf-compartment {
+    position: absolute;
+    left: 0; right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    color: #6b4423;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .shelf-compartment:hover { background: rgba(139, 90, 60, 0.12); }
+  .shelf-board:hover { filter: brightness(1.15); }
+  .shelf-dim {
+    position: absolute;
+    left: 100%;
+    margin-left: 10px;
+    font-size: 0.78rem;
+    color: #6b4423;
+    white-space: nowrap;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .mark-list {
+    list-style: none;
+    counter-reset: mark;
+  }
+  .mark-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    background: #f9f0e1;
+    border-left: 4px solid #8b5a3c;
+    border-radius: 6px;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .mark-item.highlight {
+    background: #f0d9b5;
+    transform: translateX(4px);
+  }
+  .mark-number {
+    background: #6b4423;
+    color: #fffaf3;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    margin-right: 14px;
+    flex-shrink: 0;
+  }
+  .mark-label { flex: 1; font-size: 0.95rem; }
+  .mark-value {
+    font-weight: 700;
+    color: #6b4423;
+    font-size: 1.05rem;
+  }
+  .error {
+    color: #a83232;
+    background: #fde2e2;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 15px;
+  }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .container { box-shadow: none; }
+    header { background: #6b4423 !important; -webkit-print-color-adjust: exact; }
+    .form-grid, details.advanced, .custom-heights, .button-row { display: none; }
+    .results { border-top: 2px solid #6b4423; }
+    .mark-item { page-break-inside: avoid; background: #f9f0e1 !important; -webkit-print-color-adjust: exact; }
+    .shelf-board { -webkit-print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🪵 Regal-Rechner</h1>
+    <p>Fächer gleichmäßig einteilen und anzeichnen</p>
+  </header>
+  <div class="content">
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="total">Gesamtlänge (mm)</label>
+        <input type="number" id="total" min="1" step="0.1" value="2000">
+      </div>
+      <div class="form-group">
+        <label for="count">Anzahl Fächer</label>
+        <input type="number" id="count" min="1" step="1" value="5">
+      </div>
+      <div class="form-group">
+        <label for="thickness">Brettdicke innen (mm)</label>
+        <input type="number" id="thickness" min="0.1" step="0.1" value="18">
+      </div>
+      <div class="form-group">
+        <label for="width">Regalbreite (mm, optional)</label>
+        <input type="number" id="width" min="1" step="1" value="800" placeholder="für Vorschau">
+      </div>
+    </div>
+
+    <details class="advanced">
+      <summary>Erweiterte Einstellungen</summary>
+      <div class="details-content">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="thicknessOuter">Brettdicke außen (mm)</label>
+            <input type="number" id="thicknessOuter" min="0.1" step="0.1" placeholder="leer = wie innen">
+          </div>
+          <div class="form-group">
+            <label for="rounding">Rundung (mm)</label>
+            <input type="number" id="rounding" min="0.01" step="0.01" value="0.5">
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <div class="custom-heights" id="customHeights">
+      <h3>Individuelle Fachhöhen (optional)</h3>
+      <p class="hint">Leere Felder werden gleichmäßig auf den restlichen Platz verteilt.</p>
+      <div class="ch-grid" id="chGrid"></div>
+    </div>
+
+    <div class="button-row">
+      <button onclick="calculate()">Berechnen</button>
+      <button class="secondary" onclick="window.print()">Drucken</button>
+    </div>
+
+    <div id="output"></div>
+  </div>
+</div>
+
+<script>
+const countInput = document.getElementById('count');
+const chGrid = document.getElementById('chGrid');
+const customHeightsBox = document.getElementById('customHeights');
+
+function buildCustomHeights() {
+  const n = parseInt(countInput.value);
+  chGrid.innerHTML = '';
+  if (!n || n < 1) { customHeightsBox.classList.remove('visible'); return; }
+  customHeightsBox.classList.add('visible');
+  for (let i = 0; i < n; i++) {
+    const div = document.createElement('div');
+    div.className = 'ch-item';
+    div.innerHTML = `<label>Fach ${i+1} (mm)</label><input type="number" min="1" step="0.1" placeholder="auto" data-idx="${i}">`;
+    chGrid.appendChild(div);
+  }
+}
+countInput.addEventListener('input', buildCustomHeights);
+buildCustomHeights();
+
+function round(v, step) {
+  return Math.round(v / step) * step;
+}
+function fmt(v) {
+  return (Math.round(v * 100) / 100).toString();
+}
+
+function calculate() {
+  const output = document.getElementById('output');
+  const total = parseFloat(document.getElementById('total').value);
+  const n = parseInt(document.getElementById('count').value);
+  const tIn = parseFloat(document.getElementById('thickness').value);
+  const tOutRaw = document.getElementById('thicknessOuter').value;
+  const tOut = tOutRaw === '' ? tIn : parseFloat(tOutRaw);
+  const step = parseFloat(document.getElementById('rounding').value) || 0.5;
+  const shelfWidth = parseFloat(document.getElementById('width').value) || 600;
+
+  if (!total || !n || !tIn || total <= 0 || n < 1 || tIn <= 0 || tOut <= 0) {
+    output.innerHTML = '<div class="error">Bitte alle Werte korrekt ausfüllen.</div>';
+    return;
+  }
+
+  // Brettdicken: außen (oben+unten) + (n-1) innen
+  const boardsTotal = 2 * tOut + (n - 1) * tIn;
+  const availableForComp = total - boardsTotal;
+  if (availableForComp <= 0) {
+    output.innerHTML = '<div class="error">Die Brettdicken überschreiten die Gesamtlänge.</div>';
+    return;
+  }
+
+  // Individuelle Fachhöhen
+  const customInputs = chGrid.querySelectorAll('input');
+  const customHeights = [];
+  let fixedSum = 0, fixedCount = 0;
+  customInputs.forEach((inp, i) => {
+    const v = parseFloat(inp.value);
+    if (!isNaN(v) && v > 0) {
+      customHeights[i] = v;
+      fixedSum += v;
+      fixedCount++;
+    } else {
+      customHeights[i] = null;
+    }
+  });
+
+  const autoCount = n - fixedCount;
+  const remainingForAuto = availableForComp - fixedSum;
+  if (autoCount > 0 && remainingForAuto <= 0) {
+    output.innerHTML = '<div class="error">Die festen Fachhöhen lassen keinen Platz für die übrigen Fächer.</div>';
+    return;
+  }
+  const autoHeight = autoCount > 0 ? remainingForAuto / autoCount : 0;
+  const autoHeightRounded = round(autoHeight, step);
+
+  // Endgültige Fachhöhen
+  const compHeights = customHeights.map(v => v !== null ? v : autoHeightRounded);
+
+  // Markierungen erstellen
+  const marks = [];
+  let cursor = 0;
+  marks.push({ label: 'Oberkante Brett 1 (Anfang)', value: round(cursor, step), type: 'board', refBoard: 0 });
+  cursor += tOut;
+  marks.push({ label: `Unterkante Brett 1`, value: round(cursor, step), type: 'board', refBoard: 0 });
+
+  for (let i = 0; i < n; i++) {
+    cursor += compHeights[i];
+    if (i < n - 1) {
+      marks.push({ label: `Oberkante Brett ${i+2} (nach Fach ${i+1})`, value: round(cursor, step), type: 'board', refBoard: i+1 });
+      cursor += tIn;
+      marks.push({ label: `Unterkante Brett ${i+2}`, value: round(cursor, step), type: 'board', refBoard: i+1 });
+    } else {
+      // Letztes Brett (außen)
+      marks.push({ label: `Oberkante Brett ${i+2} (Ende)`, value: round(cursor, step), type: 'board', refBoard: i+1 });
+      cursor += tOut;
+      marks.push({ label: `Unterkante Brett ${i+2} (Ende)`, value: round(cursor, step), type: 'board', refBoard: i+1 });
+    }
+  }
+
+  // Rundungs-Abweichung
+  const finalCursor = cursor;
+  const deviation = round(finalCursor - total, step);
+
+  // Vorschau aufbauen — maßstabsgetreu mit echter Breite
+  const maxPreviewHeight = 520;
+  const scale = maxPreviewHeight / total;
+  const previewHeightPx = total * scale;
+  const previewWidthPx = shelfWidth * scale;
+
+  let previewItems = '';
+  let pos = 0;
+  const numBoards = n + 1;
+  for (let i = 0; i < numBoards; i++) {
+    const t = (i === 0 || i === numBoards - 1) ? tOut : tIn;
+    const topPx = pos * scale;
+    const heightPx = Math.max(2, t * scale);
+    previewItems += `<div class="shelf-board" style="top:${topPx}px; height:${heightPx}px;" data-board="${i}" title="Brett ${i+1}: ${fmt(t)} mm"></div>`;
+    previewItems += `<div class="shelf-dim" style="top:${topPx + heightPx/2}px;">Brett ${i+1}: ${fmt(t)} mm</div>`;
+    pos += t;
+    if (i < numBoards - 1) {
+      const compTop = pos * scale;
+      const compH = compHeights[i] * scale;
+      previewItems += `<div class="shelf-compartment" style="top:${compTop}px; height:${compH}px;" data-comp="${i}">Fach ${i+1}</div>`;
+      previewItems += `<div class="shelf-dim" style="top:${compTop + compH/2}px;">↕ ${fmt(compHeights[i])} mm</div>`;
+      pos += compHeights[i];
+    }
+  }
+
+  let warningHtml = '';
+  if (Math.abs(deviation) >= step) {
+    warningHtml = `<div class="warning">Hinweis: Durch die Rundung auf ${step} mm ergibt sich eine Gesamtabweichung von ${fmt(deviation)} mm.</div>`;
+  }
+
+  let html = `
+    <div class="results">
+      <h2>Ergebnis</h2>
+      <div class="summary">
+        <div><strong>Auto-Fachhöhe:</strong> ${autoCount > 0 ? fmt(autoHeightRounded) + ' mm' : '—'}</div>
+        <div><strong>Bretter:</strong> ${numBoards} (außen ${fmt(tOut)} mm, innen ${fmt(tIn)} mm)</div>
+        <div><strong>Fächer:</strong> ${n}</div>
+        <div><strong>Gesamtlänge:</strong> ${fmt(total)} mm</div>
+      </div>
+      ${warningHtml}
+
+      <h2>Visuelle Vorschau</h2>
+      <div class="preview-wrapper">
+        <div class="shelf-preview" style="height:${previewHeightPx}px; width:${previewWidthPx}px;">
+          ${previewItems}
+        </div>
+      </div>
+
+      <h2>Markierungen (von Anfang gemessen)</h2>
+      <ol class="mark-list" id="markList">
+  `;
+  marks.forEach((m, idx) => {
+    html += `
+      <li class="mark-item" data-board="${m.refBoard}">
+        <div class="mark-number">${idx+1}</div>
+        <div class="mark-label">${m.label}</div>
+        <div class="mark-value">${fmt(m.value)} mm</div>
+      </li>
+    `;
+  });
+  html += '</ol></div>';
+  output.innerHTML = html;
+
+  // Interaktivität: Klick verbindet Vorschau ↔ Liste
+  const boardEls = output.querySelectorAll('.shelf-board');
+  const compEls = output.querySelectorAll('.shelf-compartment');
+  const markEls = output.querySelectorAll('.mark-item');
+
+  function clearHighlights() {
+    markEls.forEach(el => el.classList.remove('highlight'));
+  }
+
+  boardEls.forEach(el => {
+    el.addEventListener('click', () => {
+      clearHighlights();
+      const b = el.dataset.board;
+      markEls.forEach(m => {
+        if (m.dataset.board === b) {
+          m.classList.add('highlight');
+          m.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    });
+  });
+  compEls.forEach(el => {
+    el.addEventListener('click', () => {
+      clearHighlights();
+      const c = parseInt(el.dataset.comp);
+      // Fach i liegt zwischen Brett c und c+1 → markiere die zugehörigen Boards
+      markEls.forEach(m => {
+        const b = parseInt(m.dataset.board);
+        if (b === c || b === c + 1) m.classList.add('highlight');
+      });
+      // Erste hervorgehobene Markierung anzeigen
+      const first = output.querySelector('.mark-item.highlight');
+      if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  });
+  markEls.forEach(m => {
+    m.addEventListener('click', () => {
+      const wasActive = m.classList.contains('highlight');
+      clearHighlights();
+      if (!wasActive) m.classList.add('highlight');
+    });
+  });
+}
+</script>
+</body>
+</html>
