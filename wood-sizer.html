@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Bandsägewerk-Planer</title>
+<style>
+  :root {
+    --green-dark: #2d5016;
+    --green-mid: #4a7c2e;
+    --green-light: #8bc34a;
+    --green-bg: #f1f8e9;
+    --green-accent: #aed581;
+    --warm-bg: #fdfcf7;
+    --text: #1b2e10;
+    --warn: #d84315;
+    --card: #ffffff;
+    --shadow: 0 2px 12px rgba(45,80,22,.12);
+    --c15: #c5e1a5;
+    --c25: #aed581;
+    --c35: #7cb342;
+    --c45: #558b2f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(135deg, var(--warm-bg) 0%, var(--green-bg) 100%);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 20px;
+  }
+  h1 {
+    color: var(--green-dark);
+    margin: 0 0 4px;
+    font-weight: 600;
+  }
+  .subtitle { color: var(--green-mid); margin-bottom: 24px; font-size: .95rem;}
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+  }
+  .card h2 {
+    color: var(--green-dark);
+    margin: 0 0 16px;
+    font-size: 1.15rem;
+    border-bottom: 2px solid var(--green-accent);
+    padding-bottom: 8px;
+  }
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .input-row label {
+    flex: 1;
+    font-size: .95rem;
+  }
+  .input-row input {
+    width: 100px;
+    padding: 8px 10px;
+    border: 2px solid var(--green-accent);
+    border-radius: 8px;
+    font-size: 1rem;
+    text-align: right;
+    background: var(--warm-bg);
+  }
+  .input-row input:focus {
+    outline: none;
+    border-color: var(--green-mid);
+  }
+  .thickness-row {
+    display: grid;
+    grid-template-columns: 24px 70px 1fr auto auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    margin-bottom: 8px;
+    background: var(--green-bg);
+    border-radius: 10px;
+  }
+  .swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    border: 1px solid rgba(0,0,0,.1);
+  }
+  .thickness-label {
+    font-weight: 600;
+    color: var(--green-dark);
+  }
+  .count {
+    font-size: 1.2rem;
+    font-weight: 700;
+    min-width: 30px;
+    text-align: center;
+    color: var(--green-dark);
+  }
+  button.tn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--green-mid);
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  button.tn:hover:not(:disabled) {
+    background: var(--green-dark);
+    transform: scale(1.08);
+  }
+  button.tn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .stat {
+    background: var(--green-bg);
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+  }
+  .stat .lbl { font-size: .8rem; color: var(--green-mid); text-transform: uppercase; letter-spacing: .5px;}
+  .stat .val { font-size: 1.4rem; font-weight: 700; color: var(--green-dark); margin-top: 4px;}
+  .stat.warn .val { color: var(--warn); }
+  .stat.warn { background: #ffe0d6; }
+  #visual {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+  }
+  svg { max-width: 100%; height: auto; }
+  details {
+    margin-top: 20px;
+    background: var(--card);
+    border-radius: 14px;
+    padding: 0;
+    box-shadow: var(--shadow);
+  }
+  details summary {
+    padding: 18px 22px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--green-dark);
+    list-style: none;
+  }
+  details summary::after {
+    content: "▼";
+    float: right;
+    transition: transform .2s;
+    font-size: .8rem;
+  }
+  details[open] summary::after { transform: rotate(180deg); }
+  details .content { padding: 0 22px 22px; }
+  .std-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 40px;
+    gap: 10px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+  .std-row input { 
+    padding: 6px 8px; 
+    border: 2px solid var(--green-accent); 
+    border-radius: 6px; 
+    font-size: .95rem;
+  }
+  .std-row button {
+    background: var(--warn);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    height: 32px;
+    cursor: pointer;
+  }
+  .add-btn {
+    background: var(--green-mid);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 8px;
+    font-weight: 600;
+  }
+  .add-btn:hover { background: var(--green-dark); }
+  .actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    justify-content: center;
+  }
+  .btn-primary {
+    background: var(--green-dark);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+  }
+  .btn-primary:hover { background: var(--green-mid); }
+  .warning-banner {
+    background: #ffccbc;
+    border-left: 4px solid var(--warn);
+    color: var(--warn);
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-top: 12px;
+    font-size: .9rem;
+    display: none;
+  }
+  .warning-banner.show { display: block; }
+  .schnittliste { margin-top: 16px; font-size: .9rem;}
+  .schnittliste table { width: 100%; border-collapse: collapse;}
+  .schnittliste th, .schnittliste td { padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--green-accent);}
+  .schnittliste th { color: var(--green-dark); }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .no-print { display: none !important; }
+    .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+    details { box-shadow: none; }
+    .grid { grid-template-columns: 1fr 1fr; }
+    @page { size: A4; margin: 15mm; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🪵 Bandsägewerk-Planer</h1>
+  <div class="subtitle">Plane dein Schnittmuster effizient – dickste Bohlen mittig, dünnste außen.</div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Stamm & Sägefuge</h2>
+      <div class="input-row">
+        <label for="stamm">Stammdicke (mm)</label>
+        <input type="number" id="stamm" value="400" min="0" step="1">
+      </div>
+      <div class="input-row">
+        <label for="fuge">Sägefuge (mm)</label>
+        <input type="number" id="fuge" value="3" min="0" step="0.5">
+      </div>
+
+      <h2 style="margin-top:24px;">Bohlen auswählen</h2>
+      <div id="thicknesses"></div>
+
+      <div class="stats">
+        <div class="stat" id="stat-rest">
+          <div class="lbl">Reststärke</div>
+          <div class="val">– mm</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Bohlen gesamt</div>
+          <div class="val" id="stat-count">0</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Genutzt</div>
+          <div class="val" id="stat-used">0 mm</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Verschnitt</div>
+          <div class="val" id="stat-waste">0 mm</div>
+        </div>
+      </div>
+
+      <div class="warning-banner" id="warning">⚠️ Geplante Bohlen überschreiten die Stammdicke!</div>
+    </div>
+
+    <div class="card">
+      <h2>Schnittmuster</h2>
+      <div id="visual"></div>
+      <div class="schnittliste" id="schnittliste"></div>
+    </div>
+  </div>
+
+  <details class="no-print">
+    <summary>⚙️ Standarddicken anpassen</summary>
+    <div class="content">
+      <div id="std-list"></div>
+      <button class="add-btn" onclick="addStandard()">+ Dicke hinzufügen</button>
+    </div>
+  </details>
+
+  <div class="actions no-print">
+    <button class="btn-primary" onclick="window.print()">🖨️ Druckansicht (A4)</button>
+    <button class="btn-primary" onclick="resetAll()">↺ Zurücksetzen</button>
+  </div>
+</div>
+
+<script>
+let standards = [
+  { dicke: 15, farbe: '#c5e1a5' },
+  { dicke: 25, farbe: '#aed581' },
+  { dicke: 35, farbe: '#7cb342' },
+  { dicke: 45, farbe: '#558b2f' }
+];
+let counts = {};
+
+function initCounts() {
+  standards.forEach(s => { if (!(s.dicke in counts)) counts[s.dicke] = 0; });
+}
+
+function renderThicknesses() {
+  const wrap = document.getElementById('thicknesses');
+  wrap.innerHTML = '';
+  // sort descending for display (thickest first feels natural)
+  const sorted = [...standards].sort((a,b)=>b.dicke-a.dicke);
+  sorted.forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'thickness-row';
+    row.innerHTML = `
+      <div class="swatch" style="background:${s.farbe}"></div>
+      <div class="thickness-label">${s.dicke} mm</div>
+      <div></div>
+      <button class="tn" onclick="changeCount(${s.dicke},-1)">−</button>
+      <div class="count" id="cnt-${s.dicke}">${counts[s.dicke]||0}</div>
+      <button class="tn" id="plus-${s.dicke}" onclick="changeCount(${s.dicke},1)">+</button>
+    `;
+    wrap.appendChild(row);
+  });
+}
+
+function changeCount(dicke, delta) {
+  const next = Math.max(0, (counts[dicke]||0) + delta);
+  counts[dicke] = next;
+  update();
+}
+
+function buildOrder() {
+  // Symmetrisch: dickste mittig, dünnste außen.
+  // Bei ungerader Anzahl einer Dicke: eine in die Mitte (nur sinnvoll für die dickste Gruppe mit ungerader Anzahl).
+  // Strategie: Erstelle Liste sortiert nach Dicke absteigend, lege abwechselnd links/rechts der Mitte auf.
+  const sorted = [...standards].sort((a,b)=>b.dicke-a.dicke);
+  const left = [], right = [];
+  let middle = null;
+
+  for (const s of sorted) {
+    let n = counts[s.dicke] || 0;
+    if (n === 0) continue;
+    // wenn noch keine Mitte gesetzt und n ungerade → eine in die Mitte
+    if (middle === null && n % 2 === 1) {
+      middle = s;
+      n -= 1;
+    }
+    const pairs = Math.floor(n / 2);
+    for (let i = 0; i < pairs; i++) {
+      // dickere kommen näher zur Mitte → bei sorted (dickste zuerst) an Innenseite anhängen
+      left.push(s);  // wird oben aufgebaut: array von außen→innen? Wir bauen innen→außen.
+      right.push(s);
+    }
+    // ungerade Anzahl ohne Mittelplatz: eine bleibt übrig – wir legen sie nicht ab (Asymmetrie vermeiden)
+    // Alternative: füge auf einer Seite hinzu. Wir entscheiden uns hier für: keine asymmetrische Bohle.
+    // → User sieht über die Zählung, dass eine "übrig" wäre. Aber das wäre verwirrend.
+    // Besser: legen die Übrige auf die linke (obere) Seite. Wir handhaben es aber so:
+    if (n % 2 === 1) {
+      left.push(s); // leichte Asymmetrie nach oben
+    }
+  }
+  // left geht von Mitte nach außen (oben), right von Mitte nach außen (unten)
+  // Reihenfolge oben→unten: reverse(left) + middle + right
+  const order = [...left.slice().reverse()];
+  if (middle) order.push(middle);
+  order.push(...right);
+  return order;
+}
+
+function update() {
+  initCounts();
+  const stamm = parseFloat(document.getElementById('stamm').value) || 0;
+  const fuge = parseFloat(document.getElementById('fuge').value) || 0;
+  const order = buildOrder();
+  const total = order.length;
+  const used = order.reduce((sum, s) => sum + s.dicke, 0);
+  const kerf = total > 0 ? (total - 1) * fuge : 0;
+  const consumed = used + kerf;
+  const rest = stamm - consumed;
+
+  // counts anzeigen + Buttons disable
+  standards.forEach(s => {
+    const el = document.getElementById('cnt-' + s.dicke);
+    if (el) el.textContent = counts[s.dicke] || 0;
+    const plus = document.getElementById('plus-' + s.dicke);
+    if (plus) {
+      // Würde das Hinzufügen einer weiteren Bohle (+1 Bohle + ggf. +1 Fuge) den Stamm überschreiten?
+      const addedKerf = total > 0 ? fuge : 0;
+      const wouldUse = consumed + s.dicke + addedKerf;
+      plus.disabled = wouldUse > stamm;
+    }
+  });
+
+  // Stats
+  document.getElementById('stat-count').textContent = total;
+  document.getElementById('stat-used').textContent = consumed.toFixed(1) + ' mm';
+  document.getElementById('stat-waste').textContent = Math.max(0, rest).toFixed(1) + ' mm';
+  const restStat = document.getElementById('stat-rest');
+  restStat.querySelector('.val').textContent = rest.toFixed(1) + ' mm';
+  restStat.classList.toggle('warn', rest < 0);
+
+  document.getElementById('warning').classList.toggle('show', rest < 0);
+
+  drawVisual(order, stamm, fuge);
+  renderSchnittliste(order, fuge);
+}
+
+function drawVisual(order, stamm, fuge) {
+  const size = 360;
+  const r = size/2 - 10;
+  const cx = size/2, cy = size/2;
+  const svgNS = "http://www.w3.org/2000/svg";
+
+  let svg = `<svg xmlns="${svgNS}" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">`;
+  // Stammkreis
+  svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#f5e6c8" stroke="#8d6e63" stroke-width="2"/>`;
+
+  if (stamm > 0 && order.length > 0) {
+    // y-Positionen: zentriere die Bohlenanordnung in der Stammhöhe
+    const total = order.length;
+    const used = order.reduce((s,o)=>s+o.dicke,0) + (total-1)*fuge;
+    // Skalierung: Stamm = 2r in mm
+    const mmToPx = (2*r) / stamm;
+    let yMM = -used/2; // Startposition relativ zur Mitte
+    order.forEach((s, i) => {
+      const top = cy + yMM * mmToPx;
+      const h = s.dicke * mmToPx;
+      // Sehnenbreite oben & unten
+      const yTopRel = (yMM) / r * mmToPx > 1 ? 1 : null;
+      // Berechne Sehnenbreite an Position y (relativ zu Mitte, in px)
+      function chord(yPx) {
+        const dy = Math.abs(yPx - cy);
+        if (dy >= r) return 0;
+        return 2 * Math.sqrt(r*r - dy*dy);
+      }
+      const wTop = chord(top);
+      const wBot = chord(top + h);
+      const xTop = cx - wTop/2;
+      const xBot = cx - wBot/2;
+      // Polygon (Trapez, clipped an Kreis)
+      svg += `<path d="M ${xTop} ${top} L ${xTop+wTop} ${top} L ${xBot+wBot} ${top+h} L ${xBot} ${top+h} Z" fill="${s.farbe}" stroke="#33691e" stroke-width="0.5" opacity="0.92"/>`;
+      // Beschriftung
+      const midY = top + h/2;
+      const midChord = chord(midY);
+      if (midChord > 40 && h > 10) {
+        svg += `<text x="${cx}" y="${midY+4}" text-anchor="middle" font-size="11" fill="#1b2e10" font-weight="600">${s.dicke}mm</text>`;
+      }
+      yMM += s.dicke;
+      if (i < order.length-1) {
+        // Sägefuge als dünne Linie
+        const fugeTop = cy + yMM * mmToPx;
+        const fugeH = fuge * mmToPx;
+        const wF = chord(fugeTop + fugeH/2);
+        svg += `<rect x="${cx-wF/2}" y="${fugeTop}" width="${wF}" height="${Math.max(fugeH,0.5)}" fill="#5d4037" opacity="0.6"/>`;
+        yMM += fuge;
+      }
+    });
+  }
+  svg += `</svg>`;
+  document.getElementById('visual').innerHTML = svg;
+}
+
+function renderSchnittliste(order, fuge) {
+  const el = document.getElementById('schnittliste');
+  if (order.length === 0) { el.innerHTML = ''; return; }
+  let html = '<table><thead><tr><th>#</th><th>Position</th><th>Dicke</th></tr></thead><tbody>';
+  order.forEach((s,i)=>{
+    html += `<tr><td>${i+1}</td><td><span class="swatch" style="display:inline-block;width:14px;height:14px;background:${s.farbe};border-radius:3px;vertical-align:middle;margin-right:6px;"></span>Bohle ${i+1}</td><td>${s.dicke} mm</td></tr>`;
+  });
+  html += `</tbody></table>`;
+  html += `<div style="margin-top:8px;color:var(--green-mid);font-size:.85rem;">Sägefuge zwischen Bohlen: ${fuge} mm · Anzahl Schnitte: ${order.length-1}</div>`;
+  el.innerHTML = html;
+}
+
+function renderStandards() {
+  const wrap = document.getElementById('std-list');
+  wrap.innerHTML = '';
+  standards.forEach((s, idx) => {
+    const row = document.createElement('div');
+    row.className = 'std-row';
+    row.innerHTML = `
+      <input type="number" value="${s.dicke}" min="1" onchange="updateStandard(${idx},'dicke',this.value)">
+      <input type="color" value="${s.farbe}" onchange="updateStandard(${idx},'farbe',this.value)" style="height:32px;padding:2px;">
+      <button onclick="removeStandard(${idx})">×</button>
+    `;
+    wrap.appendChild(row);
+  });
+}
+
+function updateStandard(idx, key, val) {
+  if (key === 'dicke') {
+    const oldD = standards[idx].dicke;
+    const newD = parseInt(val) || 1;
+    standards[idx].dicke = newD;
+    if (counts[oldD] !== undefined) {
+      counts[newD] = counts[oldD];
+      if (oldD !== newD) delete counts[oldD];
+    }
+  } else {
+    standards[idx][key] = val;
+  }
+  renderThicknesses();
+  renderStandards();
+  update();
+}
+
+function removeStandard(idx) {
+  const d = standards[idx].dicke;
+  delete counts[d];
+  standards.splice(idx,1);
+  renderThicknesses();
+  renderStandards();
+  update();
+}
+
+function addStandard() {
+  standards.push({ dicke: 20, farbe: '#9ccc65' });
+  renderStandards();
+  renderThicknesses();
+  update();
+}
+
+function resetAll() {
+  Object.keys(counts).forEach(k => counts[k] = 0);
+  update();
+}
+
+document.getElementById('stamm').addEventListener('input', update);
+document.getElementById('fuge').addEventListener('input', update);
+
+initCounts();
+renderThicknesses();
+renderStandards();
+update();
+</script>
+</body>
+</html>
